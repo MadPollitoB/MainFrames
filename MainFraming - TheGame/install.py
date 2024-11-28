@@ -1,12 +1,83 @@
 import subprocess
+import re
 import os
-import config
 import csv  # Zorg dat csv is geïmporteerd
 import importlib
-from datasets_functions import create_dataset, check_dataset_exists
 
+
+#check if config file exist
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 INSTALL_FILES_DIR = os.path.join(BASE_DIR, "install_files")
+CONFIG_FILE_PATH = os.path.join(BASE_DIR, "config.py")
+
+#indien config.py  niet bestaat -> aanmaken
+if not os.path.exists(CONFIG_FILE_PATH):
+    with open(CONFIG_FILE_PATH, "w") as config_file:
+        config_file.write("zos_id = ''")
+
+# oimport extra libraries
+import config
+from datasets_functions import create_dataset, check_dataset_exists
+from helpers import clear_screen
+
+# functions
+def get_valid_zos_id():
+    """Prompt the user for a valid zOS ID until the correct format is provided."""
+    errorshow=False
+    error="\033[91mInvalid input. The z/OS ID must be in the format 'zXXXXX', where 'X' is a digit.\033[0m"
+    zos_id_pattern = r'^z\d{5}$'  # Regex for format "zXXXXX" where X is a digit.
+
+    while True:
+        clear_screen()
+        if errorshow:
+            print(f"{error}")
+
+        zos_id = input("Please enter your z/OS ID in the format 'zXXXXX' (e.g., z12345): ").strip()
+        if re.match(zos_id_pattern, zos_id):
+            return zos_id
+        else: 
+            errorshow=True
+
+def update_or_add_zos_id(zos_id):
+    """Update or add the zOS ID to the config file."""
+    zos_id_cap = zos_id.upper()
+
+    # Prepare the lines to write in config.py
+    new_lines = []
+    zos_id_exists = False
+    zos_id_cap_exists = False
+
+    # Read current config content
+    if os.path.exists(CONFIG_FILE_PATH):
+        with open(CONFIG_FILE_PATH, 'r') as file:
+            lines = file.readlines()
+        
+        # Modify lines if necessary
+        for line in lines:
+            if line.startswith('zos_id ='):
+                new_lines.append(f"zos_id = '{zos_id}'\n")
+                zos_id_exists = True
+            elif line.startswith('zos_id_cap ='):
+                new_lines.append(f"zos_id_cap = '{zos_id_cap}'\n")
+                zos_id_cap_exists = True
+            else:
+                new_lines.append(line)
+
+    # Add zos_id and zos_id_cap if they don't exist
+    if not zos_id_exists:
+        new_lines.append(f"zos_id = '{zos_id}'\n")
+    if not zos_id_cap_exists:
+        new_lines.append(f"zos_id_cap = '{zos_id_cap}'\n")
+
+    # Write the updated config content back to the file
+    with open(CONFIG_FILE_PATH, 'w') as file:
+        file.writelines(new_lines)
+
+    print(f"zOS ID saved successfully: zos_id = '{zos_id}', zos_id_cap = '{zos_id_cap}'")
+
+    #herimporteer de configfiles
+    print("Importeer de nieuwste configfile")
+    importlib.reload(config)
 
 # Functie om alle benodigde dependencies te installeren
 def install_dependencies():
