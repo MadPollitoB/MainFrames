@@ -1,8 +1,12 @@
 import re
+import os
 import subprocess
 from helpers import show_title, clear_screen
 from score import update_score
 import config
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+SCORE_FILES_DIR = os.path.join(BASE_DIR, "score_files")
 
 def check_dataset_exists(dataset_name):
     """
@@ -120,29 +124,7 @@ def delete_dataset(navigate_back):
 
     show_title("Zowe Datasets")
 
-    # Stap 1: Haal alle beschikbare datasets op
-    list_command = f"zowe zos-files list ds {config.zos_id}.*"
-    try:
-        result = subprocess.run(list_command, shell=True, capture_output=True, text=True, check=True)
-        datasets = result.stdout.strip().splitlines()
-    except subprocess.CalledProcessError as e:
-        print("\033[91m\nFout bij ophalen van datasets:\033[0m")
-        print(e.stderr)
-        input("\nDruk op Enter om terug te gaan.")
-        navigate_back()
-        return
-
-    # Controleer of er datasets zijn
-    if not datasets:
-        print("\033[93m\nGeen datasets gevonden om te verwijderen.\033[0m")
-        input("\nDruk op Enter om terug te gaan.")
-        navigate_back()
-        return
-
-    # Stap 2: Toon een genummerde lijst van datasets
-    print("Beschikbare DataSets:")
-    for i, dataset in enumerate(datasets, start=1):
-        print(f"{i}. {dataset}")
+    list_numeric_datasets
 
     print("q. back to dataset menu")
     
@@ -180,3 +162,84 @@ def delete_dataset(navigate_back):
         print(f"\nDetails van de fout:\n{e.stderr}")
         input("Druk op Enter om door te gaan.")
         navigate_back()
+
+def download_scores(): 
+    zos_id = config.zos_id
+    score_dataset = f"{zos_id}.SCORE"
+    scorelog_dataset = f"{zos_id}.SCORELOG"
+
+    score_file = os.path.join(SCORE_FILES_DIR, "score.csv")
+    log_file = os.path.join(SCORE_FILES_DIR, "logscore.csv")
+
+    # Download het bestand om de inhoud te controleren
+    download_command = f'zowe zos-files download data-set "{score_dataset}" --file "{score_file}"'
+    try:
+        subprocess.run(download_command, shell=True, check=True, capture_output=True, text=True)
+        print(f"\033[92mSCORES werden succesvol gedownload.\033[0m")
+    except subprocess.CalledProcessError as e:
+        print(f"\033[91mFout bij het downloaden van SCORES.\033[0m")
+        print(e.stderr)
+
+    download_command = f'zowe zos-files download data-set "{scorelog_dataset}" --file "{log_file}"'
+    try:
+        subprocess.run(download_command, shell=True, check=True, capture_output=True, text=True)
+        print(f"\033[92mSCORELOGS werden succesvol gedownload.\033[0m")
+    except subprocess.CalledProcessError as e:
+        print(f"\033[91mFout bij het downloaden van SCORES.\033[0m")
+        print(e.stderr)
+    
+def upload_scores():
+    zos_id = config.zos_id
+    score_dataset = f"{zos_id}.SCORE"
+    scorelog_dataset = f"{zos_id}.SCORELOG"
+
+    score_file = os.path.join(SCORE_FILES_DIR, "score.csv")
+    log_file = os.path.join(SCORE_FILES_DIR, "logscore.csv")
+    
+    # stuur scores naar SCORE
+    create_dataset(score_dataset, dataset_type="ds")
+
+    upload_command = f'zowe zos-files upload file-to-data-set "{score_file}" "{score_dataset}"'
+    try:
+        subprocess.run(upload_command, shell=True, check=True, capture_output=True, text=True)
+        print(f"\033[92mSCORES werden succesvol geüpload.\033[0m")
+    except subprocess.CalledProcessError as e:
+        print(f"\033[91mFout bij het uploaden van SCORES.\033[0m")
+        print(e.stderr)
+        
+    # stuur scores naar SCORELOG
+    create_dataset(scorelog_dataset, dataset_type="ds")
+
+    upload_command = f'zowe zos-files upload file-to-data-set "{log_file}" "{scorelog_dataset}"'
+    try:
+        subprocess.run(upload_command, shell=True, check=True, capture_output=True, text=True)
+        print(f"\033[92mSCORELOGS werden succesvol geüpload.\033[0m")
+    except subprocess.CalledProcessError as e:
+        print(f"\033[91mFout bij het uploaden van SCORELOGS.\033[0m")
+        print(e.stderr)
+
+def list_numeric_datasets():
+    # Stap 1: Haal alle beschikbare datasets op
+    list_command = f"zowe zos-files list ds {config.zos_id}.*"
+    try:
+        result = subprocess.run(list_command, shell=True, capture_output=True, text=True, check=True)
+        datasets = result.stdout.strip().splitlines()
+    except subprocess.CalledProcessError as e:
+        print("\033[91m\nFout bij ophalen van datasets:\033[0m")
+        print(e.stderr)
+        input("\nDruk op Enter om terug te gaan.")
+        navigate_back()
+        return
+
+    # Controleer of er datasets zijn
+    if not datasets:
+        print("\033[93m\nGeen datasets gevonden om te verwijderen.\033[0m")
+        input("\nDruk op Enter om terug te gaan.")
+        navigate_back()
+        return
+
+    # Stap 2: Toon een genummerde lijst van datasets
+    print("Beschikbare DataSets:")
+    for i, dataset in enumerate(datasets, start=1):
+        print(f"{i}. {dataset}")
+
