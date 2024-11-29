@@ -1,0 +1,8 @@
+# Negeer alle bestanden met de naam score.csv
+score.csv
+
+# Negeer alle bestanden met de naam scorelog.csv
+logscore.csv
+
+# Negeer de volledige folder genaamd "score"
+score_files/
