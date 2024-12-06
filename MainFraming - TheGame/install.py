@@ -97,10 +97,37 @@ def normalize_quote(quote):
     # Verwijder andere speciale tekens
     quote = quote.replace("`", "'").replace(".", "")
     # Beperk lengte
-    max_length = 80
+    max_length = 200
     if len(quote) > max_length:
         quote = quote[:max_length]
     return quote
+
+def create_score_files():
+    # Define the directory and file paths
+    directory = "score_files"
+    file_path = os.path.join(directory, "score.csv")
+    log_file_path = os.path.join(directory, "logscore.csv")
+
+    # Create the directory if it does not exist
+    os.makedirs(directory, exist_ok=True)
+
+    # Create score.txt if it does not exist
+    if not os.path.exists(file_path):
+        # Create an empty text file
+        with open(file_path, "w") as score_file:
+            pass  # Leave the file empty
+        print(f"Created {file_path}")
+    else:
+        print(f"{file_path} already exists.")
+
+    # Create logscore.txt if it does not exist
+    if not os.path.exists(log_file_path):
+        # Create an empty text file
+        with open(log_file_path, "w") as log_file:
+            pass  # Leave the file empty
+        print(f"Created {log_file_path}")
+    else:
+        print(f"{log_file_path} already exists.")
 
 # Functie om quotes te normaliseren in quotes.csv
 def normalize_quotes_file(quotes_file):
@@ -209,3 +236,64 @@ def upload_jcl_to_mainframe():
     # Verwijder de gedownloade file na controle
     if os.path.exists(download_file):
         os.remove(download_file)
+
+def check_and_create_backup_folder(folder_path):
+    """
+    Controleer of de backup-folder in de USS bestaat en maak hem aan indien nodig.
+    """
+    # Zowe CLI commando om te controleren of de folder bestaat
+    check_command = f"zowe zos-files list uss-files {folder_path}"
+    
+    try:
+        # Controleer of de folder bestaat
+        subprocess.run(check_command, shell=True, capture_output=True, text=True, check=True)
+        print(f"\033[92mBackup-folder bestaat al: {folder_path}\033[0m")
+    except subprocess.CalledProcessError:
+        # Als het folderpad niet bestaat, maak het aan
+        print(f"\033[93mBackup-folder bestaat niet. Aanmaken...\033[0m")
+        create_command = f"zowe zos-files create uss-directory {folder_path}"
+        try:
+            subprocess.run(create_command, shell=True, capture_output=True, text=True, check=True)
+            print(f"\033[92mBackup-folder succesvol aangemaakt: {folder_path}\033[0m")
+        except subprocess.CalledProcessError as e:
+            print(f"\033[91mFout bij het aanmaken van de backup-folder:\033[0m {e.stderr}")
+        except Exception as e:
+            print(f"\033[91mOnverwachte fout opgetreden bij het aanmaken van de backup-folder:\033[0m {str(e)}")
+
+def update_backup_config():
+    zos_id = config.zos_id
+    folder_name = 'backups'
+    
+    """
+    Update of voeg de USS backup folder toe aan de config file.
+    """
+    # Prepare de lijn die we willen toevoegen of bijwerken
+    folder_line = f"uss_backup_folder = '/z/{zos_id}/{folder_name}'\n"
+
+    # Nieuwe regels voor de config file
+    new_lines = []
+    folder_exists = False
+
+    # Lees de bestaande config file
+    with open(CONFIG_FILE_PATH, 'r') as file:
+        lines = file.readlines()
+
+    # Controleer of de 'uss_backup_folder' regel al bestaat
+    for line in lines:
+        if line.startswith('uss_backup_folder ='):
+            new_lines.append(folder_line)  # Update de regel
+            folder_exists = True
+        else:
+            new_lines.append(line)
+
+    # Als de regel niet bestaat, voeg hem toe
+    if not folder_exists:
+        new_lines.append(folder_line)
+
+    # Schrijf de bijgewerkte regels terug naar de config file
+    with open(CONFIG_FILE_PATH, 'w') as file:
+        file.writelines(new_lines)
+
+    print(f"Backup folder is ingesteld op: {folder_name}")
+
+    check_and_create_backup_folder(f'/z/{zos_id}/{folder_name}')

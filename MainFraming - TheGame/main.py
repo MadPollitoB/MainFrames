@@ -1,6 +1,6 @@
 import subprocess
 import importlib
-from install import check_and_create_quotes_dataset, install_dependencies, upload_rexx_script_to_mainframe, upload_jcl_to_mainframe, get_valid_zos_id, update_or_add_zos_id
+from install import create_score_files, check_and_create_quotes_dataset, install_dependencies, upload_rexx_script_to_mainframe, upload_jcl_to_mainframe, get_valid_zos_id, update_or_add_zos_id, update_backup_config
 from menu_functions import main_menu
 
 def main():
@@ -14,6 +14,9 @@ def main():
 
     # Update or add the zOS ID in config.py
     update_or_add_zos_id(zos_id)
+    
+    # check the backupfolders or update them
+    update_backup_config()
 
     # Install dependencies if not already installed
     install_dependencies()
@@ -21,6 +24,9 @@ def main():
     # Create and check if the quotes dataset exists on mainframe
     check_and_create_quotes_dataset()
     
+    # check score inveironment
+    create_score_files()
+
     # Upload the JCL and REXX script to the mainframe
     upload_rexx_script_to_mainframe()  # Upload the REXX script
     upload_jcl_to_mainframe()  # Upload the JCL script

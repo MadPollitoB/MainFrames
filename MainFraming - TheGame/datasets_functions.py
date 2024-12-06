@@ -37,9 +37,9 @@ def create_dataset(dataset_name, dataset_type="ds"):
         
         # Voor sequentiële datasets gebruik de juiste optie
         if dataset_type == "seq":
-            create_command = f"zowe zos-files create data-set-sequential {dataset_name} --record-format FB --record-length 80 --block-size 800"
+            create_command = f"zowe zos-files create data-set-sequential {dataset_name} --record-format FB --record-length 200 --block-size 800"
         else:
-            create_command = f"zowe zos-files create {dataset_type} {dataset_name} --record-format FB --record-length 80 --block-size 800"
+            create_command = f"zowe zos-files create {dataset_type} {dataset_name} --record-format FB --record-length 200 --block-size 800"
         
         try:
             subprocess.run(create_command, shell=True, check=True, capture_output=True, text=True)

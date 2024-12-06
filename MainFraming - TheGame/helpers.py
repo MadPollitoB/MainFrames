@@ -25,7 +25,7 @@ def show_additional_info():
     if os.path.exists(score_file):
         with open(score_file, mode="r", encoding="utf-8") as file:
             reader = csv.reader(file)
-            next(reader, None)  # Sla de header over
+            # next(reader, None)  # Sla de header over
             for row in reader:
                 total_score += int(row[1])
 
