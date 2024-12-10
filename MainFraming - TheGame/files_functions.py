@@ -1,5 +1,6 @@
 import re
 import os
+import shutil
 import subprocess
 from score import update_score
 import config
@@ -111,7 +112,7 @@ def upload_files_to_backup(navigate_back):
     Adds 5 points for successful uploads and displays a success message.
     """
     clear_screen()
-    show_title("Upload Files to USS Backup")
+    show_title("USS Upload Files")
 
     while True:
         # Prompt for a file path
@@ -163,21 +164,26 @@ def download_files(navigate_back):
     """
     Allows the user to download a file from the USS backup folder to the local download folder.
     """
+    import shlex
+
     clear_screen()
-    show_title("Download Files from USS Backup")
+    show_title("USS Download Files")
+
+    # Get the current directory as the base path
+    base_path = os.getcwd()
+
+    # List files with index
+    print("\nAvailable files in the USS backup folder:")
+    print("=" * 45)
+    files_list = listfiles(index=True)
+
+    if not files_list:
+        print("\033[93mNo files found in the USS backup folder.\033[0m")
+        input("\nPress Enter to go back.")
+        navigate_back()
+        return
 
     while True:
-        # List files with index
-        print("\nAvailable files in the USS backup folder:")
-        print("=" * 45)
-        files_list = listfiles(index=True)
-
-        if not files_list:
-            print("\033[93mNo files found in the USS backup folder.\033[0m")
-            input("\nPress Enter to go back.")
-            navigate_back()
-            return
-
         # Ask the user to select a file by index
         try:
             choice = input("\nEnter the index of the file to download (or 'q' to go back): ").strip()
@@ -203,24 +209,102 @@ def download_files(navigate_back):
             # Build the Zowe CLI download command
             uss_backup_folder = config.uss_backup_folder
             source_path = f"{uss_backup_folder}/{file_name}"
-            local_download_folder = config.download_folder
-            local_file_path = os.path.join(local_download_folder, file_name)
+            temp_download_path = os.path.join(base_path, file_name)  # File initially downloaded to base folder
+            local_download_folder = config.local_restore_folder
+            final_file_path = os.path.join(base_path, local_download_folder, file_name)
 
-            # Ensure the download folder exists
-            os.makedirs(local_download_folder, exist_ok=True)
+            # Ensure the restore folder exists
+            os.makedirs(os.path.join(base_path, local_download_folder), exist_ok=True)
 
-            # Modified Zowe CLI command to download the file
-            download_command = (
-                f'zowe zos-files download uss-file "{source_path}" "{local_download_folder}/{file_name}"'
-            )
+            # Escape paths properly for Windows
+            quoted_source_path = shlex.quote(source_path)
+            quoted_temp_path = shlex.quote(temp_download_path)
 
+            # Zowe CLI command to download the file to the base directory
+            download_command = f'zowe zos-files download uss-file "{source_path}"'
+
+            # Execute the download command
             subprocess.run(download_command, shell=True, check=True, capture_output=True, text=True)
 
-            print(f"\033[92mFile downloaded successfully: {file_name} to {local_file_path}\033[0m")
+            # Move the file to the restore folder
+            shutil.move(temp_download_path, final_file_path)
+
+            print(f"\033[92mFile downloaded successfully: {file_name} to {final_file_path}\033[0m")
 
             # Update score and ask if the user wants to download another file
             update_score("files", "download", 3)
             proceed = input("Do you want to download another file? (y/n): ").strip().lower()
+            if proceed != 'y':
+                print("Returning to the menu...")
+                navigate_back()
+                return
+
+        except ValueError as ve:
+            print(f"\033[91m{ve}\033[0m")
+        except subprocess.CalledProcessError as e:
+            print(f"\033[91mError downloading file: {e.stderr}\033[0m")
+        except Exception as e:
+            print(f"\033[91mUnexpected error occurred: {str(e)}\033[0m")
+
+def delete_files_from_backup(navigate_back):
+    """
+    Allows the user to download a file from the USS backup folder to the local download folder.
+    """
+    import shlex
+
+    clear_screen()
+    show_title("USS Delete Files")
+
+    # List files with index
+    print("\nAvailable files in the USS backup folder:")
+    print("=" * 45)
+    files_list = listfiles(index=True)
+
+    if not files_list:
+        print("\033[93mNo files found in the USS backup folder.\033[0m")
+        input("\nPress Enter to go back.")
+        navigate_back()
+        return
+
+    while True:
+        # Ask the user to select a file by index
+        try:
+            choice = input("\nEnter the index of the file to delete (or 'q' to go back): ").strip()
+
+            if choice.lower() == 'q':
+                print("Returning to the menu...")
+                navigate_back()
+                return
+
+            # Validate the input as a number
+            if not choice.isdigit():
+                raise ValueError("Invalid input. Please enter a number corresponding to a file index.")
+
+            file_index = int(choice) - 1
+
+            # Check if the index is valid
+            if file_index < 0 or file_index >= len(files_list):
+                raise ValueError("Invalid index. Please select a valid file.")
+
+            # Get the file name
+            file_name = files_list[file_index]
+
+            # Build the Zowe CLI download command
+            uss_backup_folder = config.uss_backup_folder
+            source_path = f"{uss_backup_folder}/{file_name}"
+
+            # Zowe CLI command to download the file to the base directory
+            download_command = f'zowe zos-files delete uss-file "{source_path}" -f'
+
+            # Execute the download command
+            subprocess.run(download_command, shell=True, check=True, capture_output=True, text=True)
+
+
+            print(f"\033[92mFile deleted successfully: {file_name}\033[0m")
+
+            # Update score and ask if the user wants to download another file
+            update_score("files", "download", 5)
+            proceed = input("Do you want to delete another file? (y/n): ").strip().lower()
             if proceed != 'y':
                 print("Returning to the menu...")
                 navigate_back()

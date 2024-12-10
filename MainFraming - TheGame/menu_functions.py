@@ -18,7 +18,8 @@ from datasets_functions import (
 from files_functions import (
     list_all_uss_files, 
     download_files,
-    upload_files_to_backup
+    upload_files_to_backup,
+    delete_files_from_backup
 )
 from score import (
     show_score, 
@@ -170,8 +171,7 @@ def files_menu():
     elif choice == '3':
         download_files(navigate_back=files_menu)
     elif choice == '4':
-        print("Remove from backup")
-        files_menu()
+        delete_files_from_backup(navigate_back=files_menu)
     elif choice == '5':
         main_menu()
     elif choice == '6':

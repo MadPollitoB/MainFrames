@@ -124,7 +124,7 @@ def delete_dataset(navigate_back):
 
     show_title("Zowe Datasets")
 
-    list_numeric_datasets()
+    datasets = list_numeric_datasets()
 
     print("q. back to dataset menu")
     
@@ -243,3 +243,5 @@ def list_numeric_datasets():
     print("Available DataSets:")
     for i, dataset in enumerate(datasets, start=1):
         print(f"{i}. {dataset}")
+
+    return datasets
