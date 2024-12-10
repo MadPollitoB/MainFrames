@@ -5,6 +5,49 @@ from score import update_score
 import config
 from helpers import show_title, clear_screen
 
+
+def listfiles(index=False):
+    """
+    Lists all files in the USS backup folder.
+    If `index` is True, the files will be listed with an index number.
+    """
+    uss_backup_folder = config.uss_backup_folder
+
+    # Build the Zowe CLI command
+    list_command = f"zowe zos-files list uss-files {uss_backup_folder}"
+    try:
+        # Execute the Zowe CLI command
+        list_files = subprocess.run(list_command, shell=True, capture_output=True, text=True, check=True)
+
+        # Decode the output
+        files = list_files.stdout.splitlines()
+
+        # Extract filenames using regex
+        files_list = []
+        for line in files:
+            match = re.match(r'^(.+?)\s+(-[rwx-]+)\s+', line)
+            if match:
+                files_list.append(match.group(1))
+
+        # Print the files
+        if index:
+            for idx, file in enumerate(files_list):
+                print(f"{idx + 1}. {file}")
+        else:
+            for file in files_list:
+                print(file)
+
+        return files_list
+
+    except subprocess.CalledProcessError as e:
+        print("\033[91mError retrieving files from USS:\033[0m")
+        print(e.stderr)
+        return []
+    except Exception as e:
+        print("\033[91mUnexpected error occurred:\033[0m")
+        print(str(e))
+        return []
+
 def list_all_uss_files(navigate_back, message=""):
     """
     Retrieves all files in the USS backup folder using Zowe CLI, 
@@ -115,3 +158,77 @@ def upload_files_to_backup(navigate_back):
             print("Returning to the menu...")
             navigate_back()
             return
+
+def download_files(navigate_back):
+    """
+    Allows the user to download a file from the USS backup folder to the local download folder.
+    """
+    clear_screen()
+    show_title("Download Files from USS Backup")
+
+    while True:
+        # List files with index
+        print("\nAvailable files in the USS backup folder:")
+        print("=" * 45)
+        files_list = listfiles(index=True)
+
+        if not files_list:
+            print("\033[93mNo files found in the USS backup folder.\033[0m")
+            input("\nPress Enter to go back.")
+            navigate_back()
+            return
+
+        # Ask the user to select a file by index
+        try:
+            choice = input("\nEnter the index of the file to download (or 'q' to go back): ").strip()
+
+            if choice.lower() == 'q':
+                print("Returning to the menu...")
+                navigate_back()
+                return
+
+            # Validate the input as a number
+            if not choice.isdigit():
+                raise ValueError("Invalid input. Please enter a number corresponding to a file index.")
+
+            file_index = int(choice) - 1
+
+            # Check if the index is valid
+            if file_index < 0 or file_index >= len(files_list):
+                raise ValueError("Invalid index. Please select a valid file.")
+
+            # Get the file name
+            file_name = files_list[file_index]
+
+            # Build the Zowe CLI download command
+            uss_backup_folder = config.uss_backup_folder
+            source_path = f"{uss_backup_folder}/{file_name}"
+            local_download_folder = config.download_folder
+            local_file_path = os.path.join(local_download_folder, file_name)
+
+            # Ensure the download folder exists
+            os.makedirs(local_download_folder, exist_ok=True)
+
+            # Modified Zowe CLI command to download the file
+            download_command = (
+                f'zowe zos-files download uss-file "{source_path}" "{local_download_folder}/{file_name}"'
+            )
+
+            subprocess.run(download_command, shell=True, check=True, capture_output=True, text=True)
+
+            print(f"\033[92mFile downloaded successfully: {file_name} to {local_file_path}\033[0m")
+
+            # Update score and ask if the user wants to download another file
+            update_score("files", "download", 3)
+            proceed = input("Do you want to download another file? (y/n): ").strip().lower()
+            if proceed != 'y':
+                print("Returning to the menu...")
+                navigate_back()
+                return
+
+        except ValueError as ve:
+            print(f"\033[91m{ve}\033[0m")
+        except subprocess.CalledProcessError as e:
+            print(f"\033[91mError downloading file: {e.stderr}\033[0m")
+        except Exception as e:
+            print(f"\033[91mUnexpected error occurred: {str(e)}\033[0m")

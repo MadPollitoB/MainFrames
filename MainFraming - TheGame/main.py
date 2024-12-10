@@ -8,7 +8,7 @@ from install import (
     upload_jcl_to_mainframe,
     get_valid_zos_id,
     update_or_add_zos_id,
-    update_backup_config,
+    update_backup_config
 )
 from menu_functions import main_menu
 

@@ -262,51 +262,62 @@ def check_and_create_backup_folder(folder_path):
 
 def update_backup_config():
     zos_id = config.zos_id
-    folder_name = 'backups'
-    
+    backup_folder_name = 'backups'
+    restore_folder_name = 'backups_restore'
+
     """
-    Update or add the USS backup folder to the config file.
+    Update or add the USS backup folder and local restore folder to the config file.
     """
     # Get current directory
     current_dir = os.getcwd()
-    backup_restore_name = "backup_restore"
-    # Full path to the folder
-    backup_restore_path = os.path.join(current_dir, backup_restore_name)
 
-    # Check if the folder exists
-    if not os.path.exists(backup_restore_path):
+    # Full path to the local restore folder
+    restore_folder_path = os.path.join(current_dir, restore_folder_name)
+
+    # Check if the local restore folder exists
+    if not os.path.exists(restore_folder_path):
         # Create the folder
-        os.makedirs(backup_restore_path)
-        print(f"\033[92mBackup folder created: {backup_restore_path}\033[0m")  # Green text
+        os.makedirs(restore_folder_path)
+        print(f"\033[92mLocal restore folder created: {restore_folder_path}\033[0m")  # Green text
     else:
-        print(f"\033[93mBackup folder already exists: {backup_restore_path}\033[0m")  # Yellow text
+        print(f"\033[93mLocal restore folder already exists: {restore_folder_path}\033[0m")  # Yellow text
 
-    folder_line = f"uss_backup_folder = '/z/{zos_id}/{folder_name}'\n"
+    # Lines to be written in the config file
+    backup_folder_line = f"uss_backup_folder = '/z/{zos_id}/{backup_folder_name}'\n"
+    restore_folder_line = f"local_restore_folder = '{restore_folder_name}'\n"
 
     # New lines for the config file
     new_lines = []
-    folder_exists = False
+    backup_folder_exists = False
+    restore_folder_exists = False
 
     # Read the existing config file
     with open(CONFIG_FILE_PATH, 'r') as file:
         lines = file.readlines()
 
-    # Check if the 'uss_backup_folder' line already exists
+    # Check if the 'uss_backup_folder' and 'local_restore_folder' lines already exist
     for line in lines:
         if line.startswith('uss_backup_folder ='):
-            new_lines.append(folder_line)  # Update the line
-            folder_exists = True
+            new_lines.append(backup_folder_line)  # Update the backup line
+            backup_folder_exists = True
+        elif line.startswith('local_restore_folder ='):
+            new_lines.append(restore_folder_line)  # Update the restore line
+            restore_folder_exists = True
         else:
             new_lines.append(line)
 
-    # If the line does not exist, add it
-    if not folder_exists:
-        new_lines.append(folder_line)
+    # If the lines do not exist, add them
+    if not backup_folder_exists:
+        new_lines.append(backup_folder_line)
+    if not restore_folder_exists:
+        new_lines.append(restore_folder_line)
 
     # Write the updated lines back to the config file
     with open(CONFIG_FILE_PATH, 'w') as file:
         file.writelines(new_lines)
 
-    print(f"\033[92mBackup folder set to: {folder_name}\033[0m")
+    print(f"\033[92mUSS Backup folder set to: /z/{zos_id}/{backup_folder_name}\033[0m")
+    print(f"\033[92mLocal restore folder set to: {restore_folder_path}\033[0m")
 
-    check_and_create_backup_folder(f'/z/{zos_id}/{folder_name}')
+    # Ensure backup folder exists on USS
+    check_and_create_backup_folder(f'/z/{zos_id}/{backup_folder_name}')
