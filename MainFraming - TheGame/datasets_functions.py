@@ -10,32 +10,32 @@ SCORE_FILES_DIR = os.path.join(BASE_DIR, "score_files")
 
 def check_dataset_exists(dataset_name):
     """
-    Controleert of een dataset bestaat op het mainframe.
-    Retourneert True als de dataset bestaat, anders False.
+    Checks if a dataset exists on the mainframe.
+    Returns True if the dataset exists, otherwise False.
     """
     check_command = f"zowe zos-files list ds {dataset_name}"
     try:
         result = subprocess.run(check_command, shell=True, check=True, capture_output=True, text=True)
-        # Als er geen fout is, betekent dit dat de dataset bestaat
-        if result.stdout.strip():  # Als er een output is, betekent dit dat de dataset bestaat
+        # If no error occurs, it means the dataset exists
+        if result.stdout.strip():  # If there is output, it means the dataset exists
             return True
     except subprocess.CalledProcessError:
-        pass  # Geen output betekent de dataset bestaat niet
+        pass  # No output means the dataset does not exist
     return False
 
 def create_dataset(dataset_name, dataset_type="ds"):
     """
-    Maakt een dataset aan als deze nog niet bestaat.
-    Het type kan "ds" voor een gewone dataset zijn, of "pds" voor een Partitioned Data Set.
-    Gebruik "seq" voor sequentiële datasets.
+    Creates a dataset if it does not already exist.
+    The type can be "ds" for a regular dataset or "pds" for a Partitioned Data Set.
+    Use "seq" for sequential datasets.
     """
-    # Controleer of de dataset bestaat
+    # Check if the dataset exists
     if check_dataset_exists(dataset_name):
-        print(f"\033[92mDataset {dataset_name} bestaat al.\033[0m")
+        print(f"\033[93mDataset {dataset_name} already exists.\033[0m")
     else:
-        print(f"\033[93mDataset {dataset_name} bestaat niet. Het wordt aangemaakt...\033[0m")
+        print(f"\033[96mDataset {dataset_name} does not exist. Creating it...\033[0m")
         
-        # Voor sequentiële datasets gebruik de juiste optie
+        # Use appropriate options for sequential datasets
         if dataset_type == "seq":
             create_command = f"zowe zos-files create data-set-sequential {dataset_name} --record-format FB --record-length 200 --block-size 800"
         else:
@@ -43,14 +43,14 @@ def create_dataset(dataset_name, dataset_type="ds"):
         
         try:
             subprocess.run(create_command, shell=True, check=True, capture_output=True, text=True)
-            print(f"\033[92mDataset {dataset_name} succesvol aangemaakt.\033[0m")
+            print(f"\033[92mDataset {dataset_name} created successfully.\033[0m")
         except subprocess.CalledProcessError as e:
-            print(f"\033[91mFout bij het aanmaken van de dataset {dataset_name}.\033[0m")
+            print(f"\033[91mError creating dataset {dataset_name}.\033[0m")
             print(e.stderr)
 
 def list_all_datasets(navigate_back, message=""):
     """
-    Haalt alle datasets op met behulp van Zowe CLI, gebruikmakend van de zos_id uit config.cfg.
+    Retrieves all datasets using Zowe CLI, based on the zos_id in config.cfg.
     """
     clear_screen()
     show_title("Zowe Datasets")
@@ -61,106 +61,106 @@ def list_all_datasets(navigate_back, message=""):
     else: 
         update_score("datasets", "read", 1)
 
-    # Bouw het Zowe CLI-commando
+    # Build the Zowe CLI command
     list_command = f"zowe zos-files list ds {config.zos_id}.*"
 
     try:
-        # Voer het Zowe CLI-commando uit
+        # Execute the Zowe CLI command
         list_ds = subprocess.run(list_command, shell=True, capture_output=True, text=True, check=True)
 
-        # Decodeer en toon de output
-        print("Beschikbare DataSets:")
+        # Decode and display the output
+        print("Available DataSets:")
         print("=" * 24)
         print(list_ds.stdout)
     except subprocess.CalledProcessError as e:
-        print("\033[91m\nFout bij ophalen van datasets:\033[0m")
+        print("\033[91m\nError retrieving datasets:\033[0m")
         print(e.stderr)
     except FileNotFoundError:
-        print("\033[91m\nZowe CLI niet gevonden. Zorg ervoor dat Zowe CLI is geïnstalleerd en geconfigureerd.\033[0m")
+        print("\033[91m\nZowe CLI not found. Ensure Zowe CLI is installed and configured.\033[0m")
 
-    input("\nDruk op Enter om terug te gaan.")
+    input("\nPress Enter to go back.")
 
-    # Gebruik de callback om terug te navigeren
+    # Use the callback to navigate back
     navigate_back()
 
 def create_new_dataset(navigate_back):
     """
-    Creëert een dataset met Zowe CLI, gebruikmakend van de zos_id uit config.cfg.
-    Geeft succes- of foutmeldingen weer.
+    Creates a dataset using Zowe CLI, based on the zos_id in config.cfg.
+    Displays success or error messages.
     """
     clear_screen()
     show_title("Zowe Datasets")
 
-    # Vraag de gebruiker om een datasetnaam
-    datasetnaam = ""
-    while not datasetnaam: 
-        datasetnaam = input("Voer een naam in voor de nieuwe dataset: ").strip()
+    # Prompt the user for a dataset name
+    dataset_name = ""
+    while not dataset_name: 
+        dataset_name = input("Enter a name for the new dataset: ").strip()
 
-        if not datasetnaam:
-            print("\033[91m\nGeen datasetnaam opgegeven. Probeer opnieuw.\033[0m")
+        if not dataset_name:
+            print("\033[91m\nNo dataset name provided. Please try again.\033[0m")
         
-        if not re.match("^[a-zA-Z0-9]+$", datasetnaam):
-           print("\033[91m\nOngeldige naam. Gebruik alleen letters en cijfers.\033[0m")
-           datasetnaam = ""
+        if not re.match("^[a-zA-Z0-9]+$", dataset_name):
+           print("\033[91m\nInvalid name. Use only letters and numbers.\033[0m")
+           dataset_name = ""
     
-    datasetnaam = datasetnaam.lower()
+    dataset_name = dataset_name.lower()
 
-    # Bouw de volledige naam van de dataset
-    dataset_name = f"{config.zos_id}.{datasetnaam}"
+    # Construct the full dataset name
+    dataset_name_full = f"{config.zos_id}.{dataset_name}"
 
-    # Maak de dataset aan (gebruik de create_dataset functie)
-    create_dataset(dataset_name, dataset_type="ds")
+    # Create the dataset (use the create_dataset function)
+    create_dataset(dataset_name_full, dataset_type="ds")
 
-    # Na het succesvol aanmaken van de dataset, toon de datasets
+    # After successfully creating the dataset, display the datasets
     update_score("datasets", "create", 5)
-    list_all_datasets(navigate_back, "Dataset succesvol aangemaakt!")
+    list_all_datasets(navigate_back, "Dataset created successfully!")
 
 def delete_dataset(navigate_back):
     """
-    Verwijdert een dataset met behulp van Zowe CLI.
-    Toont eerst een genummerde lijst van datasets, waarna de gebruiker een keuze maakt.
+    Deletes a dataset using Zowe CLI.
+    First displays a numbered list of datasets for the user to choose from.
     """
     clear_screen()
 
     show_title("Zowe Datasets")
 
-    list_numeric_datasets
+    list_numeric_datasets()
 
     print("q. back to dataset menu")
     
-    # Stap 3: Vraag de gebruiker om een keuze
+    # Step 3: Ask the user for a choice
     while True:
-        choice = input("\nVoer het nummer in van de dataset die je wilt verwijderen of 'q' om terug te gaan: ").strip().lower()
+        choice = input("\nEnter the number of the dataset to delete or 'q' to go back: ").strip().lower()
 
         if choice == 'q':
-            # Als de gebruiker 'q' invoert, ga terug naar het datasetmenu
+            # If the user enters 'q', go back to the dataset menu
             navigate_back()
             return
 
         try:
-            # Probeer de keuze te converteren naar een integer
+            # Try converting the choice to an integer
             choice = int(choice)
             if choice < 1 or choice > len(datasets):
-                print("\033[91m\nError: Verkeerde invoer! Kies een geldig nummer of 'q' om terug te gaan.\033[0m")
+                print("\033[91m\nError: Invalid input! Choose a valid number or 'q' to go back.\033[0m")
             else:
-                break  # Breek uit de loop als de invoer geldig is
+                break  # Exit the loop if the input is valid
         except ValueError:
-            # Als de invoer geen geldig nummer is, toon een foutmelding
-            print("\033[91m\nError: Verkeerde invoer! Kies een geldig nummer of 'q' om terug te gaan.\033[0m")
+            # If the input is not a valid number, show an error message
+            print("\033[91m\nError: Invalid input! Choose a valid number or 'q' to go back.\033[0m")
 
-    # Stap 4: Verwijder de gekozen dataset
+    # Step 4: Delete the selected dataset
     dataset_to_delete = datasets[choice - 1]
     delete_command = f"zowe zos-files delete data-set {dataset_to_delete} -f"
     try:
         subprocess.run(delete_command, shell=True, check=True, capture_output=True, text=True)
         update_score("datasets", "delete", 5) 
-        list_all_datasets(navigate_back, "Dataset succesvol verwijderd!")
+        list_all_datasets(navigate_back, "Dataset deleted successfully!")
 
     except subprocess.CalledProcessError as e:
         clear_screen()
-        print("\033[91mDataset verwijderen is niet gelukt.\033[0m")
-        print(f"\nDetails van de fout:\n{e.stderr}")
-        input("Druk op Enter om door te gaan.")
+        print("\033[91mFailed to delete dataset.\033[0m")
+        print(f"\nError details:\n{e.stderr}")
+        input("Press Enter to continue.")
         navigate_back()
 
 def download_scores(): 
@@ -171,21 +171,22 @@ def download_scores():
     score_file = os.path.join(SCORE_FILES_DIR, "score.csv")
     log_file = os.path.join(SCORE_FILES_DIR, "logscore.csv")
 
-    # Download het bestand om de inhoud te controleren
+    # Download the score dataset
     download_command = f'zowe zos-files download data-set "{score_dataset}" --file "{score_file}"'
     try:
         subprocess.run(download_command, shell=True, check=True, capture_output=True, text=True)
-        print(f"\033[92mSCORES werden succesvol gedownload.\033[0m")
+        print(f"\033[92mSCORES downloaded successfully.\033[0m")
     except subprocess.CalledProcessError as e:
-        print(f"\033[91mFout bij het downloaden van SCORES.\033[0m")
+        print(f"\033[91mError downloading SCORES.\033[0m")
         print(e.stderr)
 
+    # Download the score log dataset
     download_command = f'zowe zos-files download data-set "{scorelog_dataset}" --file "{log_file}"'
     try:
         subprocess.run(download_command, shell=True, check=True, capture_output=True, text=True)
-        print(f"\033[92mSCORELOGS werden succesvol gedownload.\033[0m")
+        print(f"\033[92mSCORELOGS downloaded successfully.\033[0m")
     except subprocess.CalledProcessError as e:
-        print(f"\033[91mFout bij het downloaden van SCORES.\033[0m")
+        print(f"\033[91mError downloading SCORELOGS.\033[0m")
         print(e.stderr)
     
 def upload_scores():
@@ -196,50 +197,49 @@ def upload_scores():
     score_file = os.path.join(SCORE_FILES_DIR, "score.csv")
     log_file = os.path.join(SCORE_FILES_DIR, "logscore.csv")
     
-    # stuur scores naar SCORE
+    # Upload scores to SCORE
     create_dataset(score_dataset, dataset_type="ds")
 
     upload_command = f'zowe zos-files upload file-to-data-set "{score_file}" "{score_dataset}"'
     try:
         subprocess.run(upload_command, shell=True, check=True, capture_output=True, text=True)
-        print(f"\033[92mSCORES werden succesvol geüpload.\033[0m")
+        print(f"\033[92mSCORES uploaded successfully.\033[0m")
     except subprocess.CalledProcessError as e:
-        print(f"\033[91mFout bij het uploaden van SCORES.\033[0m")
+        print(f"\033[91mError uploading SCORES.\033[0m")
         print(e.stderr)
         
-    # stuur scores naar SCORELOG
+    # Upload scores to SCORELOG
     create_dataset(scorelog_dataset, dataset_type="ds")
 
     upload_command = f'zowe zos-files upload file-to-data-set "{log_file}" "{scorelog_dataset}"'
     try:
         subprocess.run(upload_command, shell=True, check=True, capture_output=True, text=True)
-        print(f"\033[92mSCORELOGS werden succesvol geüpload.\033[0m")
+        print(f"\033[92mSCORELOGS uploaded successfully.\033[0m")
     except subprocess.CalledProcessError as e:
-        print(f"\033[91mFout bij het uploaden van SCORELOGS.\033[0m")
+        print(f"\033[91mError uploading SCORELOGS.\033[0m")
         print(e.stderr)
 
 def list_numeric_datasets():
-    # Stap 1: Haal alle beschikbare datasets op
+    # Step 1: Retrieve all available datasets
     list_command = f"zowe zos-files list ds {config.zos_id}.*"
     try:
         result = subprocess.run(list_command, shell=True, capture_output=True, text=True, check=True)
         datasets = result.stdout.strip().splitlines()
     except subprocess.CalledProcessError as e:
-        print("\033[91m\nFout bij ophalen van datasets:\033[0m")
+        print("\033[91m\nError retrieving datasets:\033[0m")
         print(e.stderr)
-        input("\nDruk op Enter om terug te gaan.")
+        input("\nPress Enter to go back.")
         navigate_back()
         return
 
-    # Controleer of er datasets zijn
+    # Check if there are datasets
     if not datasets:
-        print("\033[93m\nGeen datasets gevonden om te verwijderen.\033[0m")
-        input("\nDruk op Enter om terug te gaan.")
+        print("\033[93m\nNo datasets found to delete.\033[0m")
+        input("\nPress Enter to go back.")
         navigate_back()
         return
 
-    # Stap 2: Toon een genummerde lijst van datasets
-    print("Beschikbare DataSets:")
+    # Step 2: Display a numbered list of datasets
+    print("Available DataSets:")
     for i, dataset in enumerate(datasets, start=1):
         print(f"{i}. {dataset}")
-

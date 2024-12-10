@@ -1,30 +1,30 @@
 import subprocess
 import re
 import os
-import csv  # Zorg dat csv is geïmporteerd
+import csv  # Make sure csv is imported
 import importlib
 
 
-#check if config file exist
+# Check if config file exists
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 INSTALL_FILES_DIR = os.path.join(BASE_DIR, "install_files")
 CONFIG_FILE_PATH = os.path.join(BASE_DIR, "config.py")
 
-#indien config.py  niet bestaat -> aanmaken
+# If config.py does not exist -> create it
 if not os.path.exists(CONFIG_FILE_PATH):
     with open(CONFIG_FILE_PATH, "w") as config_file:
         config_file.write("zos_id = ''")
 
-# oimport extra libraries
+# Import extra libraries
 import config
 from datasets_functions import create_dataset, check_dataset_exists
 from helpers import clear_screen
 
-# functions
+# Functions
 def get_valid_zos_id():
     """Prompt the user for a valid zOS ID until the correct format is provided."""
-    errorshow=False
-    error="\033[91mInvalid input. The z/OS ID must be in the format 'zXXXXX', where 'X' is a digit.\033[0m"
+    errorshow = False
+    error = "\033[91mInvalid input. The z/OS ID must be in the format 'zXXXXX', where 'X' is a digit.\033[0m"
     zos_id_pattern = r'^z\d{5}$'  # Regex for format "zXXXXX" where X is a digit.
 
     while True:
@@ -36,7 +36,7 @@ def get_valid_zos_id():
         if re.match(zos_id_pattern, zos_id):
             return zos_id
         else: 
-            errorshow=True
+            errorshow = True
 
 def update_or_add_zos_id(zos_id):
     """Update or add the zOS ID to the config file."""
@@ -75,28 +75,28 @@ def update_or_add_zos_id(zos_id):
 
     print(f"zOS ID saved successfully: zos_id = '{zos_id}', zos_id_cap = '{zos_id_cap}'")
 
-    #herimporteer de configfiles
-    print("Importeer de nieuwste configfile")
+    # Re-import the config file
+    print("Importing the latest config file")
     importlib.reload(config)
 
-# Functie om alle benodigde dependencies te installeren
+# Function to install all required dependencies
 def install_dependencies():
-    """Installeer alle vereiste dependencies."""
+    """Install all required dependencies."""
     dependencies = ['pyfiglet', 'requests']
     for dependency in dependencies:
         try:
             importlib.import_module(dependency)
         except ImportError:
-            print(f"Dependency {dependency} is niet geïnstalleerd. Installeren...")
+            print(f"Dependency {dependency} is not installed. Installing...")
             subprocess.check_call(['pip', 'install', dependency])
 
-# Functie om een quote te normaliseren
+# Function to normalize a quote
 def normalize_quote(quote):
-    # Vervang typografische aanhalingstekens door standaard aanhalingstekens
+    # Replace typographic quotes with standard quotes
     quote = quote.replace("’", "'").replace("‘", "'").replace("“", "\"").replace("”", "\"")
-    # Verwijder andere speciale tekens
+    # Remove other special characters
     quote = quote.replace("`", "'").replace(".", "")
-    # Beperk lengte
+    # Limit length
     max_length = 200
     if len(quote) > max_length:
         quote = quote[:max_length]
@@ -116,24 +116,24 @@ def create_score_files():
         # Create an empty text file
         with open(file_path, "w") as score_file:
             pass  # Leave the file empty
-        print(f"Created {file_path}")
+        print(f"\033[92mCreated {file_path}\033[0m")
     else:
-        print(f"{file_path} already exists.")
+        print(f"\033[93m{file_path} already exists.\033[0m")
 
     # Create logscore.txt if it does not exist
     if not os.path.exists(log_file_path):
         # Create an empty text file
         with open(log_file_path, "w") as log_file:
             pass  # Leave the file empty
-        print(f"Created {log_file_path}")
+        print(f"\033[92mCreated {log_file_path}\033[0m")
     else:
-        print(f"{log_file_path} already exists.")
+        print(f"\033[93m{log_file_path} already exists.\033[0m")
 
-# Functie om quotes te normaliseren in quotes.csv
+# Function to normalize quotes in quotes.csv
 def normalize_quotes_file(quotes_file):
-    """Normaliseer alle quotes in het quotes.csv bestand."""
+    """Normalize all quotes in the quotes.csv file."""
     if not os.path.exists(quotes_file):
-        print(f"\033[91m{quotes_file} niet gevonden. Controleer of het bestand aanwezig is.\033[0m")
+        print(f"\033[91m{quotes_file} not found. Verify the file exists.\033[0m")
         return
 
     normalized_quotes = []
@@ -150,11 +150,11 @@ def normalize_quotes_file(quotes_file):
             writer = csv.writer(file)
             writer.writerows(normalized_quotes)
 
-        print(f"\033[92mAlle quotes in {quotes_file} zijn succesvol genormaliseerd.\033[0m")
+        print(f"\033[92mAll quotes in {quotes_file} were successfully normalized.\033[0m")
     except Exception as e:
-        print(f"\033[91mFout bij het normaliseren van het bestand {quotes_file}: {e}\033[0m")
+        print(f"\033[91mError normalizing the file {quotes_file}: {e}\033[0m")
 
-# Functie om de dataset QUOTES en QUOTE.MOMENT aan te maken
+# Function to create the QUOTES and QUOTE.MOMENT datasets
 def check_and_create_quotes_dataset():
     zos_id = config.zos_id
     dataset_name = f"{zos_id}.QUOTES"
@@ -170,130 +170,143 @@ def check_and_create_quotes_dataset():
         create_dataset(moment_dataset_name, dataset_type="seq")
 
     if not os.path.exists(quotes_file):
-        print(f"\033[91m{quotes_file} niet gevonden. Controleer of het bestand aanwezig is.\033[0m")
+        print(f"\033[91m{quotes_file} not found. Verify the file exists.\033[0m")
         return
 
     upload_command = f"zowe zos-files upload file-to-data-set \"{quotes_file}\" \"{dataset_name}\""
     try:
         subprocess.run(upload_command, shell=True, check=True, capture_output=True, text=True)
-        print(f"\033[92m{quotes_file} succesvol geüpload naar {dataset_name}\033[0m")
+        print(f"\033[92m{quotes_file} successfully uploaded to {dataset_name}\033[0m")
     except subprocess.CalledProcessError as e:
-        print(f"\033[91mFout bij het uploaden van {quotes_file} naar {dataset_name}.\033[0m")
+        print(f"\033[91mError uploading {quotes_file} to {dataset_name}.\033[0m")
         print(e.stderr)
 
-# Functie om REXX script te uploaden naar mainframe
+# Function to upload REXX script to mainframe
 def upload_rexx_script_to_mainframe():
     zos_id = config.zos_id
     rexx_dataset = f"{zos_id}.REXX"
     rexx_file = os.path.abspath(os.path.join(INSTALL_FILES_DIR, "RANDOMQUOTE.REXX"))
-    print(f"Zoeken naar REXX-bestand op: {rexx_file}")
+    print(f"Searching for REXX file at: {rexx_file}")
 
     create_dataset(rexx_dataset, dataset_type="pds")
 
     upload_command = f'zowe zos-files upload file-to-data-set "{rexx_file}" "{rexx_dataset}(RANDOMQT)"'
     try:
         subprocess.run(upload_command, shell=True, check=True, capture_output=True, text=True)
-        print(f"\033[92m{rexx_file} succesvol geüpload naar {rexx_dataset}(RANDOMQT).\033[0m")
+        print(f"\033[92m{rexx_file} successfully uploaded to {rexx_dataset}(RANDOMQT).\033[0m")
     except subprocess.CalledProcessError as e:
-        print(f"\033[91mFout bij het uploaden van {rexx_file} naar {rexx_dataset}(RANDOMQT).\033[0m")
+        print(f"\033[91mError uploading {rexx_file} to {rexx_dataset}(RANDOMQT).\033[0m")
         print(e.stderr)
 
-# Functie om JCL job te uploaden
+# Function to upload JCL job
 def upload_jcl_to_mainframe():
     zos_id = config.zos_id
     jcl_dataset = f"{zos_id}.JCL"
     member = "RNDQTJOB"
     jcl_file = os.path.abspath(os.path.join(INSTALL_FILES_DIR, "RUNRNDQT.JCL"))
-    print(f"Zoeken naar JCL-bestand op: {jcl_file}")
+    print(f"Searching for JCL file at: {jcl_file}")
 
     create_dataset(jcl_dataset, dataset_type="pds")
 
     upload_command = f'zowe zos-files upload file-to-data-set "{jcl_file}" "{jcl_dataset}({member})"'
     try:
         subprocess.run(upload_command, shell=True, check=True, capture_output=True, text=True)
-        print(f"\033[92m{jcl_file} succesvol geüpload naar {jcl_dataset}({member}).\033[0m")
+        print(f"\033[92m{jcl_file} successfully uploaded to {jcl_dataset}({member}).\033[0m")
     except subprocess.CalledProcessError as e:
-        print(f"\033[91mFout bij het uploaden van {jcl_file} naar {jcl_dataset}({member}).\033[0m")
+        print(f"\033[91mError uploading {jcl_file} to {jcl_dataset}({member}).\033[0m")
         print(e.stderr)
 
-    # Download het bestand om de inhoud te controleren
+    # Download the file to verify the content
     download_file = "downloaded_member.txt"
     download_command = f'zowe zos-files download data-set "{jcl_dataset}({member})" --file "{download_file}"'
     subprocess.run(download_command, shell=True, check=True, capture_output=True, text=True)
 
-    # Controleer of het bestand echt is wat we verwacht hadden
+    # Verify that the file is as expected
     if os.path.exists(download_file):
         with open(download_file, "r") as f_downloaded:
             downloaded_content = f_downloaded.read().strip()
 
         if downloaded_content != "":
-           print(f"\033[92mHet bestand {jcl_dataset}({member}) is succesvol gevuld.\033[0m")
+            print(f"\033[92mThe file {jcl_dataset}({member}) was successfully populated.\033[0m")
         else:
-             print(f"\033[91mHet bestand {jcl_dataset}({member}) is leeg. QUOTES zullen niet werken.\033[0m")
+            print(f"\033[91mThe file {jcl_dataset}({member}) is empty. QUOTES will not work.\033[0m")
     else:
-        print(f"\033[91mFout bij het downloaden van {jcl_dataset}({member}). Bestand niet gevonden.\033[0m")
+        print(f"\033[91mError downloading {jcl_dataset}({member}). File not found.\033[0m")
 
-    # Verwijder de gedownloade file na controle
+    # Remove the downloaded file after verification
     if os.path.exists(download_file):
         os.remove(download_file)
 
 def check_and_create_backup_folder(folder_path):
     """
-    Controleer of de backup-folder in de USS bestaat en maak hem aan indien nodig.
+    Check if the backup folder in the USS exists and create it if needed.
     """
-    # Zowe CLI commando om te controleren of de folder bestaat
+    # Zowe CLI command to check if the folder exists
     check_command = f"zowe zos-files list uss-files {folder_path}"
     
     try:
-        # Controleer of de folder bestaat
+        # Check if the folder exists
         subprocess.run(check_command, shell=True, capture_output=True, text=True, check=True)
-        print(f"\033[92mBackup-folder bestaat al: {folder_path}\033[0m")
+        print(f"\033[93mBackup folder already exists: {folder_path}\033[0m")
     except subprocess.CalledProcessError:
-        # Als het folderpad niet bestaat, maak het aan
-        print(f"\033[93mBackup-folder bestaat niet. Aanmaken...\033[0m")
+        # If the folder path does not exist, create it
+        print(f"\033[93mBackup folder does not exist. Creating...\033[0m")
         create_command = f"zowe zos-files create uss-directory {folder_path}"
         try:
             subprocess.run(create_command, shell=True, capture_output=True, text=True, check=True)
-            print(f"\033[92mBackup-folder succesvol aangemaakt: {folder_path}\033[0m")
+            print(f"\033[92mBackup folder successfully created: {folder_path}\033[0m")
         except subprocess.CalledProcessError as e:
-            print(f"\033[91mFout bij het aanmaken van de backup-folder:\033[0m {e.stderr}")
+            print(f"\033[91mError creating the backup folder:\033[0m {e.stderr}")
         except Exception as e:
-            print(f"\033[91mOnverwachte fout opgetreden bij het aanmaken van de backup-folder:\033[0m {str(e)}")
+            print(f"\033[91mUnexpected error occurred while creating the backup folder:\033[0m {str(e)}")
 
 def update_backup_config():
     zos_id = config.zos_id
     folder_name = 'backups'
     
     """
-    Update of voeg de USS backup folder toe aan de config file.
+    Update or add the USS backup folder to the config file.
     """
-    # Prepare de lijn die we willen toevoegen of bijwerken
+    # Get current directory
+    current_dir = os.getcwd()
+    backup_restore_name = "backup_restore"
+    # Full path to the folder
+    backup_restore_path = os.path.join(current_dir, backup_restore_name)
+
+    # Check if the folder exists
+    if not os.path.exists(backup_restore_path):
+        # Create the folder
+        os.makedirs(backup_restore_path)
+        print(f"\033[92mBackup folder created: {backup_restore_path}\033[0m")  # Green text
+    else:
+        print(f"\033[93mBackup folder already exists: {backup_restore_path}\033[0m")  # Yellow text
+
     folder_line = f"uss_backup_folder = '/z/{zos_id}/{folder_name}'\n"
 
-    # Nieuwe regels voor de config file
+    # New lines for the config file
     new_lines = []
     folder_exists = False
 
-    # Lees de bestaande config file
+    # Read the existing config file
     with open(CONFIG_FILE_PATH, 'r') as file:
         lines = file.readlines()
 
-    # Controleer of de 'uss_backup_folder' regel al bestaat
+    # Check if the 'uss_backup_folder' line already exists
     for line in lines:
         if line.startswith('uss_backup_folder ='):
-            new_lines.append(folder_line)  # Update de regel
+            new_lines.append(folder_line)  # Update the line
             folder_exists = True
         else:
             new_lines.append(line)
 
-    # Als de regel niet bestaat, voeg hem toe
+    # If the line does not exist, add it
     if not folder_exists:
         new_lines.append(folder_line)
 
-    # Schrijf de bijgewerkte regels terug naar de config file
+    # Write the updated lines back to the config file
     with open(CONFIG_FILE_PATH, 'w') as file:
         file.writelines(new_lines)
 
-    print(f"Backup folder is ingesteld op: {folder_name}")
+    print(f"\033[92mBackup folder set to: {folder_name}\033[0m")
 
     check_and_create_backup_folder(f'/z/{zos_id}/{folder_name}')

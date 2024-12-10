@@ -1,30 +1,39 @@
 import subprocess
 import importlib
-from install import create_score_files, check_and_create_quotes_dataset, install_dependencies, upload_rexx_script_to_mainframe, upload_jcl_to_mainframe, get_valid_zos_id, update_or_add_zos_id, update_backup_config
+from install import (
+    create_score_files,
+    check_and_create_quotes_dataset,
+    install_dependencies,
+    upload_rexx_script_to_mainframe,
+    upload_jcl_to_mainframe,
+    get_valid_zos_id,
+    update_or_add_zos_id,
+    update_backup_config,
+)
 from menu_functions import main_menu
 
 def main():
-    print("De nodige dependencies, datasets en mainframe bestanden worden gecontroleerd en geïnstalleerd!")
-    print("Even geduld...")
+    print("\033[96mChecking and installing required dependencies, datasets, and mainframe files!\033[0m")
+    print("\033[96mPlease wait...\033[0m")
     print()
 
-    #opvragen IBM login gegevens 
+    # Prompt for IBM login credentials
     # Get valid zOS ID from the user
     zos_id = get_valid_zos_id()
 
     # Update or add the zOS ID in config.py
     update_or_add_zos_id(zos_id)
     
-    # check the backupfolders or update them
+    # Check or update the backup folders
     update_backup_config()
 
     # Install dependencies if not already installed
     install_dependencies()
     
-    # Create and check if the quotes dataset exists on mainframe
+    # Create and verify if the quotes dataset exists on the mainframe
     check_and_create_quotes_dataset()
     
-    # check score inveironment
+    # Check score environment
     create_score_files()
 
     # Upload the JCL and REXX script to the mainframe

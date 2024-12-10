@@ -4,15 +4,13 @@ import subprocess
 from score import update_score
 import config
 from helpers import show_title, clear_screen
-from score import update_score
-import config
 
 def list_all_uss_files(navigate_back, message=""):
     """
-    Haalt alle bestanden op in de backup-folder van de USS met behulp van Zowe CLI, 
-    gebruikmakend van de USS pad uit config.cfg.
+    Retrieves all files in the USS backup folder using Zowe CLI, 
+    based on the USS path from config.cfg.
     
-    Score wordt alleen bijgewerkt als het ophalen van de bestanden succesvol was.
+    The score is updated only if the files are successfully retrieved.
     """
     clear_screen()
     show_title("USS Backup Files")
@@ -22,98 +20,98 @@ def list_all_uss_files(navigate_back, message=""):
 
     uss_backup_folder = config.uss_backup_folder
 
-    # Bouw het Zowe CLI-commando
+    # Build the Zowe CLI command
     list_command = f"zowe zos-files list uss-files {uss_backup_folder}"
 
     try:
-        # Voer het Zowe CLI-commando uit
+        # Execute the Zowe CLI command
         list_files = subprocess.run(list_command, shell=True, capture_output=True, text=True, check=True)
 
-        # Decodeer de output
-        files = list_files.stdout.splitlines()  # Splits de output in individuele regels
+        # Decode the output
+        files = list_files.stdout.splitlines()  # Split the output into individual lines
 
-        # Gebruik regex om hele bestandsnamen te extraheren, inclusief spaties
+        # Use regex to extract full filenames, including spaces
         files_and_types = []
         for line in files:
-            # Regex om naam en type te scheiden
+            # Regex to separate name and type
             match = re.match(r'^(.+?)\s+(-[rwx-]+)\s+', line)
             if match:
                 files_and_types.append(f"{match.group(1)}")
 
-        # Toon de bestanden
-        print("Beschikbare bestanden in de USS-backupfolder:")
+        # Display the files
+        print("Available files in the USS backup folder:")
         print("=" * 45)
         if files_and_types:
             for file in files_and_types:
                 print(file)
         else:
-            print("\033[93mGeen bestanden gevonden in de backup-folder.\033[0m")
+            print("\033[93mNo files found in the backup folder.\033[0m")
 
-        # Score wordt alleen bijgewerkt als we de bestanden succesvol konden ophalen
+        # Update the score only if the files were successfully retrieved
         update_score("files", "list", 1)
 
     except subprocess.CalledProcessError as e:
-        print("\033[91m\nFout bij ophalen van bestanden uit USS:\033[0m")
+        print("\033[91m\nError retrieving files from USS:\033[0m")
         print(e.stderr)
     except Exception as e:
-        print("\033[91m\nOnverwachte fout opgetreden:\033[0m")
+        print("\033[91m\nUnexpected error occurred:\033[0m")
         print(str(e))
 
-    input("\nDruk op Enter om terug te gaan.")
+    input("\nPress Enter to go back.")
 
-    # Gebruik de callback om terug te navigeren
+    # Use the callback to navigate back
     navigate_back()
 
 def upload_files_to_backup(navigate_back):
     """
-    Upload bestanden naar de USS-backupfolder met behulp van Zowe CLI.
-    Voeg 5 punten toe bij succesvolle uploads en toon een succesbericht.
+    Uploads files to the USS backup folder using Zowe CLI.
+    Adds 5 points for successful uploads and displays a success message.
     """
     clear_screen()
-    show_title("Upload Bestanden naar USS Backup")
+    show_title("Upload Files to USS Backup")
 
     while True:
-        # Vraag om een bestandsnaam
-        bestandspad = input("Voer het volledige pad in van het bestand dat je wilt uploaden (of 'q' om terug te gaan): ").strip()
+        # Prompt for a file path
+        file_path = input("Enter the full path of the file to upload (or 'q' to go back): ").strip()
 
-        # Controleer of de gebruiker terug wil naar het menu
-        if bestandspad.lower() == 'q':
-            print("Terug naar het menu...")
+        # Check if the user wants to go back to the menu
+        if file_path.lower() == 'q':
+            print("Returning to the menu...")
             navigate_back()
             return
 
-        # Controleer of het bestand bestaat
-        if not os.path.isfile(bestandspad):
-            print("\033[91m\nHet opgegeven bestand bestaat niet. Probeer opnieuw.\033[0m")
+        # Check if the file exists
+        if not os.path.isfile(file_path):
+            print("\033[91m\nThe specified file does not exist. Please try again.\033[0m")
             continue
 
-        # Controleer op een geldige bestandsnaam
-        bestandsnaam = os.path.basename(bestandspad)
-        if not re.match(r"^[a-zA-Z0-9_.\-\s]+$", bestandsnaam):
-            print("\033[91m\nOngeldige bestandsnaam. Gebruik alleen letters, cijfers, spaties, underscores, of streepjes.\033[0m")
+        # Validate the file name
+        file_name = os.path.basename(file_path)
+        if not re.match(r"^[a-zA-Z0-9_.\-\s]+$", file_name):
+            print("\033[91m\nInvalid file name. Use only letters, numbers, spaces, underscores, or dashes.\033[0m")
             continue
 
-        # Bouw het Zowe CLI-commando voor upload
+        # Build the Zowe CLI command for upload
         uss_backup_folder = config.uss_backup_folder
-        doelpad = f"{uss_backup_folder}/{bestandsnaam}"
-        upload_command = f'zowe zos-files upload file-to-uss "{bestandspad}" "{doelpad}" --binary'
+        destination_path = f"{uss_backup_folder}/{file_name}"
+        upload_command = f'zowe zos-files upload file-to-uss "{file_path}" "{destination_path}" --binary'
 
         try:
-            # Voer het uploadcommando uit
+            # Execute the upload command
             subprocess.run(upload_command, shell=True, check=True, capture_output=True, text=True)
-            print(f"\033[92m Bestand succesvol geüpload: {bestandspad} naar {doelpad}\033[0m")
+            print(f"\033[92m File uploaded successfully: {file_path} to {destination_path}\033[0m")
 
-            # Voeg punten toe en toon succesbericht
+            # Add points and display success message
             update_score("files", "upload", 5)
-            print("5 punten toegevoegd voor de upload.\n")
+            print("5 points added for the upload.\n")
 
         except subprocess.CalledProcessError as e:
-            print(f"\033[91m Fout bij uploaden van bestand: {e.stderr}\033[0m")
+            print(f"\033[91m Error uploading file: {e.stderr}\033[0m")
             continue
 
-        # Vraag of de gebruiker nog een bestand wil uploaden
-        doorgaan = input("Wil je nog een bestand uploaden? (y/n): ").strip().lower()
-        if doorgaan != 'y':
-            print("Terug naar het menu...")
+        # Ask if the user wants to upload another file
+        proceed = input("Do you want to upload another file? (y/n): ").strip().lower()
+        if proceed != 'y':
+            print("Returning to the menu...")
             navigate_back()
             return
