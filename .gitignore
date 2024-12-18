@@ -6,3 +6,6 @@ logscore.csv
 
 # Negeer de volledige folder genaamd "score"
 score_files/
+
+# Negeer de volledige folder genaamd "LOG"
+LOG/
