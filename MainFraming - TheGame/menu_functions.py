@@ -232,5 +232,6 @@ def score_menu():
 
 def exit_app():
     """Closes the application."""
+    clear_screen()
     print("\033[93mApplication is closing.\033[0m")
     exit()

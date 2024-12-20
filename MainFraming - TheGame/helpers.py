@@ -22,12 +22,16 @@ def show_additional_info():
     # Retrieve total score from score.csv
     total_score = 0
     score_file = os.path.join(SCORE_FILES_DIR, "score.csv")  # Correct location of score.csv
-    if os.path.exists(score_file):
+    # Check if the file exists and is not empty
+    if os.path.exists(score_file) and os.path.getsize(score_file) > 0:
         with open(score_file, mode="r", encoding="utf-8") as file:
             reader = csv.reader(file)
-            # next(reader, None)  # Skip the header if present
             for row in reader:
-                total_score += int(row[1])
+                if len(row) == 2:  # Ensure the row has at least two elements
+                    try:
+                        total_score += int(row[1])
+                    except ValueError:
+                        pass  # Skip rows with invalid data
 
     # Print additional information
     print("=" * 25)
@@ -55,7 +59,7 @@ def execute_jcl_job():
         print(f"\033[91mError executing JCL job '{jcl_job_name}'.\033[0m")
         print(e.stderr)
 
-def show_title(*titles):
+def show_title(*titles, additional=True):
     """
     Displays one or more titles in pyfiglet format with empty lines in between.
     Displays additional information afterward.
@@ -65,7 +69,8 @@ def show_title(*titles):
         print()  # Empty line between titles
     
     # Call show_additional_info once after all titles
-    show_additional_info()
+    if additional:
+        show_additional_info()
 
 def clear_screen():
     """Clears the console screen."""

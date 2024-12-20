@@ -11,6 +11,14 @@ from install import (
     update_backup_config
 )
 from menu_functions import main_menu
+from cheating import check_cheating
+import os
+
+# Define paths for score and log files
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+SCORE_FILES_DIR = os.path.join(BASE_DIR, "score_files")
+score_file = os.path.join(SCORE_FILES_DIR, "score.csv")
+log_file = os.path.join(SCORE_FILES_DIR, "logscore.csv")
 
 def main():
     print("\033[96mChecking and installing required dependencies, datasets, and mainframe files!\033[0m")
@@ -42,6 +50,10 @@ def main():
 
     input("\nPress Enter to start the program.")
    
+    check_cheating(score_file, log_file)
+
+    input("\nPress Enter to start the program.")
+    
     main_menu(True)
 
 if __name__ == "__main__":

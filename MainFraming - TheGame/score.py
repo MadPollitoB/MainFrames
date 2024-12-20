@@ -43,7 +43,7 @@ def update_score(category, action, added_score):
 # Function to update logscore.csv with a timestamp
 def log_score_change(category, action, added_score):
     log_file = os.path.join(SCORE_FILES_DIR, "logscore.csv")
-    current_time = datetime.now().strftime("%d-%m-%Y, %H:%M:%S")
+    current_time = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
     new_row = [current_time, category, action, added_score]
 
     try:
@@ -94,33 +94,38 @@ def show_score_logging():
         print("\033[91mNo log data found.\033[0m")
 
 # Function to reset scores
-def reset_scores():
+def reset_scores(message=True):
     score_file = os.path.join(SCORE_FILES_DIR, "score.csv")
     log_file = os.path.join(SCORE_FILES_DIR, "logscore.csv")
     
+    confirm='y'
+
     while True:
-        confirm = input("Are you sure you want to reset the scores? This will delete the score files. (y/n): ").strip().lower()
+        if message:
+            confirm = input("Are you sure you want to reset the scores? This will delete the score files. (y/n): ").strip().lower()
 
         if confirm == 'y':
             # Delete the existing files
             if os.path.exists(score_file):
                 os.remove(score_file)
-                print("\033[92mscore.csv file has been deleted.\033[0m")
+                if message:
+                    print("\033[92mscore.csv file has been deleted.\033[0m")
             
             if os.path.exists(log_file):
                 os.remove(log_file)
-                print("\033[92mlogscore.csv file has been deleted.\033[0m")
+                if message:
+                    print("\033[92mlogscore.csv file has been deleted.\033[0m")
 
             # Recreate the files with proper headers
             with open(score_file, mode='w', newline='', encoding='utf-8') as file:
                 writer = csv.writer(file)
-                writer.writerow([""])  # Add header
-            print("\033[92mscore.csv file has been recreated.\033[0m")
+            if message:
+                print("\033[92mscore.csv file has been recreated.\033[0m")
 
             with open(log_file, mode='w', newline='', encoding='utf-8') as file:
                 writer = csv.writer(file)
-                writer.writerow([""])  # Add header
-            print("\033[92mlogscore.csv file has been recreated.\033[0m")
+            if message:
+                print("\033[92mlogscore.csv file has been recreated.\033[0m")
 
             break
 
