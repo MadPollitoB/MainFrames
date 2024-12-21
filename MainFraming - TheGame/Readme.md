@@ -73,7 +73,7 @@ With MainFraming, you can:
 
 1. Clone or download this repository to your local machine:
    ```bash
-   git clone <repository_url>
+   git clone https://github.com/MadPollitoB/MainFrames.git
    ```
 2. Open a terminal in the project directory:
    ```bash
@@ -83,11 +83,7 @@ With MainFraming, you can:
    ```bash
    pip install -r requirements.txt
    ```
-4. Run the setup script to initialize configurations:
-   ```bash
-   python install.py
-   ```
-5. Start the program:
+4. Start the program:
    ```bash
    python main.py
    ```
@@ -122,7 +118,7 @@ The configuration is stored in `config.py`. This file is automatically updated d
 - **Zowe CLI Errors**:
   Ensure Zowe CLI is installed and configured with valid credentials.
 - **Missing Configurations**:
-  Re-run `install.py` to regenerate missing files or configurations.
+  Re-run `main.py` to regenerate missing files or configurations.
 - **File Upload Errors**:
   Verify that the file path and name are correct.
 
