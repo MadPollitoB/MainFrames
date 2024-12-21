@@ -1,40 +1,40 @@
-# MainFraming - The Game
+# MainFraming: The Game
 
-MainFraming is an interactive game and tool that allows you to manage datasets and files on the mainframe. 
-Additionally, you can track scores, upload quotes, and use a dynamic menu.
+MainFraming is an interactive game and tool that allows you to manage datasets and files on the mainframe while providing a gamified experience with scores and dynamic quotes. This application leverages Zowe CLI for seamless mainframe interaction and Python for user-friendly operations.
+
+---
+
+## Table of Contents
+
+1. [Overview](#overview)
+2. [Features](#features)
+    - [Menu Options](#menu-options)
+3. [Setup Instructions](#setup-instructions)
+    - [Requirements](#requirements)
+    - [Installation Steps](#installation-steps)
+4. [Usage](#usage)
+5. [Configuration](#configuration)
+6. [Developer Notes](#developer-notes)
+7. [Troubleshooting](#troubleshooting)
+8. [License](#license)
+
+---
 
 ## Overview
+
 With MainFraming, you can:
-- Create, view, and delete mainframe datasets.
-- Manage file backups using USS directories.
-- Track and upload/download scores.
-- Renew and display quotes.
+- **Create, view, and delete mainframe datasets**.
+- **Manage file backups** using USS directories.
+- **Track scores**, upload/download scores, and view logs of your actions.
+- **Upload and display quotes**, including the "Quote of the Moment."
+- **Detect and prevent cheating**, ensuring a fair gaming experience.
 
-## Installation
-
-### Requirements
-1. Python 3.x
-2. Zowe CLI configured correctly.
-3. Required Python packages installed.
-4. required packages (pyfiglet, requests)
-
-### Steps
-1. Clone or download this repository to your local machine.
-2. Open a terminal in the project directory.
-3. Install the required packages:
-   ```bash
-   pip install -r 
-   ```
-4. Run the program:
-   ```bash
-   python main.py
-   ```
-
-During the first run, you will go through an installation process to set up your z/OS ID, check required datasets, and configure the environment.
+---
 
 ## Features
 
 ### Menu Options
+
 #### 1. Manage Datasets
 - **View**: Display all datasets on the mainframe.
 - **Create**: Add a new dataset.
@@ -57,8 +57,81 @@ During the first run, you will go through an installation process to set up your
 #### 5. Exit
 - Exit the program.
 
-## Configuration
-The configuration is stored in `config.py`. This file is automatically updated during the installation. Ensure that Zowe CLI is correctly set up and that you provide the correct z/OS ID.
+---
+
+## Setup Instructions
+
+### Requirements
+1. **Python 3.7+**
+2. **Zowe CLI**: Installed and configured for IBM mainframe access.
+3. **IBM z/OS ID**: Required for dataset operations.
+4. Required Python packages:
+   - `pyfiglet` for ASCII art.
+   - `requests` for HTTP requests.
+
+### Installation Steps
+
+1. Clone or download this repository to your local machine:
+   ```bash
+   git clone <repository_url>
+   ```
+2. Open a terminal in the project directory:
+   ```bash
+   cd mainframing-game
+   ```
+3. Install the required Python dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+4. Run the setup script to initialize configurations:
+   ```bash
+   python install.py
+   ```
+5. Start the program:
+   ```bash
+   python main.py
+   ```
+
+During the first run, you will go through an installation process to set up your z/OS ID, check required datasets, and configure the environment.
+
+---
 
 ## Usage
-Start the program using `main.py` and follow the menu options. This program is designed for easy interaction with datasets and files on mainframes while adding a gamified scoring element.
+
+Start the program using `main.py` and follow the menu options. This program is designed for easy interaction with datasets and files on mainframes while adding a gamified scoring element. The intuitive menus make it easy to navigate through the various functionalities.
+
+---
+
+## Configuration
+
+The configuration is stored in `config.py`. This file is automatically updated during the installation. Ensure that Zowe CLI is correctly set up and that you provide the correct z/OS ID.
+
+---
+
+## Developer Notes
+
+1. **Zowe CLI Configuration**:
+   Ensure that Zowe CLI is installed and configured correctly. Use `zowe --version` to verify the installation.
+2. **Dataset Naming**:
+   Use valid dataset naming conventions (e.g., `zXXXXX.DATASET`).
+
+---
+
+## Troubleshooting
+
+- **Zowe CLI Errors**:
+  Ensure Zowe CLI is installed and configured with valid credentials.
+- **Missing Configurations**:
+  Re-run `install.py` to regenerate missing files or configurations.
+- **File Upload Errors**:
+  Verify that the file path and name are correct.
+
+---
+
+## License
+
+This project is licensed under the `BjornProductions` License.
+
+---
+
+Enjoy exploring the world of IBM mainframes with **MainFraming: The Game**!
