@@ -81,7 +81,7 @@ With MainFraming, you can:
    ```
 3. Install the required Python dependencies:
    ```bash
-   pip install -r requirements.txt
+   pip install -r install_files/requirements.txt
    ```
 4. Start the program:
    ```bash
