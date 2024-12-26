@@ -51,8 +51,6 @@ def main():
     input("\nPress Enter to start the program.")
    
     check_cheating(score_file, log_file)
-
-    input("\nPress Enter to start the program.")
     
     main_menu(True)
 

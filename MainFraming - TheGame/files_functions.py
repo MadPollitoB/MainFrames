@@ -303,7 +303,7 @@ def delete_files_from_backup(navigate_back):
             print(f"\033[92mFile deleted successfully: {file_name}\033[0m")
 
             # Update score and ask if the user wants to download another file
-            update_score("files", "download", 5)
+            update_score("files", "delete", 5)
             proceed = input("Do you want to delete another file? (y/n): ").strip().lower()
             if proceed != 'y':
                 print("Returning to the menu...")

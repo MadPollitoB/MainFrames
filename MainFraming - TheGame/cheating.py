@@ -47,5 +47,34 @@ def handle_cheating():
     print("\033[93mYour scores have been deleted.\033[0m")
     print("\033[94mYou gain 200 points for finding this EasterEgg because Björn Approves This Action\033[0m")
     
+        # ASCII art of an Easter egg
+    easter_egg_art = """
+              ,,..,,,,..,,,.., 
+          .,%%%%%;;%%%;;%%%%;;%%,. 
+       .;;%%%"""""''""''"""''";%%%;;, 
+     .;%%%%'                    `;;%%%, 
+   .%%%%;'                        `%%%;; 
+  .%%%;;'      .sSSSSs.            `%%;;, 
+  %%;;%'      .SSSSSSSS,%%%%,      `%;;%% 
+ .;;%%% .::::.SSSSSSSSSS,%%%%%,oOOOo;;%%%, 
+ %%%%;'.:xXXXXx!SSSSSSS!a@@@@@a!OOOOO%%%;; 
+ %%;;% :XXXXXXXX!SSSSS!@@@@@@@@@!OOOO%%;;% 
+ ;;%%% XXXXXXXXXX!SSS!@@@@@@@@@@@!OOO;;%%% 
+a@@a@@a@@a@@a@@a@@a@@a@@a@@a@@a@.sSSSSSs.sSSs.sSSSSs. 
+`;%%%;|;%%%;|;%%%;|;%%%;|;%%%;|,SSssssSS;SSSS;SSsssSS 
+.%;|;%%%;|;%%%;|;%%%;|;%%%;|;%%,SSSSSSSS;SSSS;SSSSSSS 
+`;%%%;|;%%%;|;%%%;|;%%%;|;%%%;|;`SSSSSS'^ssss^`SSSSS' 
+.%;|;%%%;|;%%%;|;%%%;|;%%%;|;%%%;|;%,ssSSS'`SSSsss, 
+`;%%%;|;%%%;|;%%%;|;%%%;|;%%%;|;%%%,SSSSSS' `SSSSSS 
+ .;|;%%%;|;%%%;|;%%%;|;%%%;|;%%%;|,SSSSSS'  ,SSSSSS 
+ `%%%;|;%%%;|;%%%;|;%%%;|;%%%;|;,SSS^SS'%  ,SSSSSS' 
+  `|;%%%;|;%%%;|;%%%;|;%%%;|;%%,S';%%`S'  ,SSS^SSS 
+    `;|;%%%;|;%%%;|;%%%;|;%%%;|;%%%;|;'   `S'  `S' 
+    """
+    print("\033[95m" + easter_egg_art + "\033[0m")  # Use green text for the art
+
     # Bonus Easter Egg Score
     update_score("easteregg", "found", 200)
+
+    # start the game
+    input("\nPress Enter to start the program.")
